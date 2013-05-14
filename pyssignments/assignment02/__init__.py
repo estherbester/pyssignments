@@ -13,7 +13,7 @@ tests written in tests.py pass. As on the previous assignment you will not need
 to change a line of code in tests.py.
 """
 import re
-from collections import defaultdict
+from collections import Counter
 
 
 class WordCounter(object):
@@ -32,8 +32,8 @@ class WordCounter(object):
         some of these data structures.
         """
         self._all_words = []
-        self._unique_words = []
-        self._word_counts = {}
+        self._unique_words = set()
+        self._word_counts = Counter()
 
     def read_text_string(self, text_string):
         """
@@ -43,7 +43,7 @@ class WordCounter(object):
         """
         read_words_list = self.get_word_list(text_string)
         self._all_words.extend(read_words_list)
-        self._unique_words += read_words_list
+        self._unique_words.update(read_words_list)
         self._update_word_counts(read_words_list)
 
     def get_word_list(self, text_string):
@@ -53,7 +53,9 @@ class WordCounter(object):
         """
         non_alphanum_pattern = re.compile('\W+')
         read_words_list = non_alphanum_pattern.split(text_string)
-        return read_words_list
+        # Store the word in lowercase, and exclude empty strings
+        # that the regex gives us
+        return [word.lower() for word in read_words_list if word]
 
     def read_text_file(self, file_path):
         """
@@ -63,32 +65,13 @@ class WordCounter(object):
         for f_line in open(file_path):
             self.read_text_string(f_line)
 
-    def _get_word_counts(self, words_list):
-        """
-        Internal class useful for getting word counts for a given list of words.
-        Given a list of words will return a dict where the keys are words and
-        the values are the number of times a word appeared in the list.
-        """
-        word_counts = defaultdict(lambda: 0)
-
-        for word in words_list:
-            word_counts[word] += 1
-
-        return word_counts
-
     def _update_word_counts(self, words_list):
         """
         A helper function that's supposed to help track the number of
         occurrences of words as more text is read into the counter by
         manipulating our internal 'memory' structures.
         """
-        current_word_counts = self._get_word_counts(words_list)
-
-        for word, current_count in current_word_counts.items():
-            if word in self._word_counts:
-                self._word_counts[word] += current_count
-            else:
-                self._word_counts[word] = current_count
+        self._word_counts.update(Counter(words_list))
 
     def get_most_frequent_words(self, number_of_words):
         """
@@ -102,7 +85,9 @@ class WordCounter(object):
                     ten words will be returned, ordered by most frequent word
                     first.
         """
-        return []
+        # we get tuples: (word, frequency)
+        most_common_words = self._word_counts.most_common(number_of_words)
+        return [word[0] for word in most_common_words]
 
     def get_words_by_count(self, count):
         """
@@ -110,7 +95,12 @@ class WordCounter(object):
         of times specified by count. If you pass in 10 for count, you will get
         all words that occur in the text exactly 10 times.
         """
-        return []
+        count_list = []
+        for (word, frequency) in self._word_counts.iteritems():
+            if frequency == count:
+                count_list.append(word)
+        return count_list
+        #return [word[0] for word in self._word_counts.items() if word[1] == count]
 
     def get_unique_words(self):
         """
@@ -118,7 +108,7 @@ class WordCounter(object):
         By unique words we mean that this list will contain every word in the
         text with no duplicates.
         """
-        return self._unique_words
+        return list(self._unique_words)
 
     def shared_words_in_string(self, comparative_string):
         """
@@ -129,7 +119,7 @@ class WordCounter(object):
         """
         comp_word_list = self.get_word_list(comparative_string)
         # Figure out which new words are shared with already counted words.
-        return []
+        return list(self._unique_words & set(comp_word_list))
 
     def generate_word_count_strings(self):
         """
@@ -151,10 +141,7 @@ class WordCounter(object):
         text input it would be silly to store a HUGE list of strings in memory
         , each of which differs from all the others by only a few characters.
         """
-        string_format = "The word '%(word)s' has been counted %(count)s times."
-        word = "test word"
-        count = 10
+        string_format = "The word '%s' has been counted %d time%s."
+        for word, count in self._word_counts.items():
+            yield string_format % (word, count, 's'[count == 1:])
 
-        word_count_string = string_format % {"word": word, "count": count}
-
-        return word_count_string
