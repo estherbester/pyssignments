@@ -97,7 +97,8 @@ class LinkedList(object):
           4. create another expression that makes nodes from step 3's expression
         """
         linked_list = LinkedList()
-        linked_list.append((Node(func(node)) for node in self.get_values()))
+        for new_node in (Node(func(value)) for value in self.get_values()):
+            linked_list.append(new_node)
         return linked_list
 
     def filter(self, pred):
@@ -112,7 +113,10 @@ class LinkedList(object):
           3. create one generator expression to filter by `pred`
           4. create another expression that makes nodes from step 3's expression
         """
-        pass
+        new_list = LinkedList()
+        for new_node in (Node(value) for value in self.get_values() if pred(value)):
+            new_list.append(new_node)
+        return new_list
 
     def reduce(self, func):
         """
@@ -126,4 +130,9 @@ class LinkedList(object):
           3. make sure you handle all three cases in the test suite
               (empty list, singleton list, multiple item list)
         """
-        pass
+        results = None
+        try:
+            current_value = self.next()
+            results = func(current_value, results)
+        except StopIteration:
+            return results
