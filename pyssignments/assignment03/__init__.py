@@ -6,6 +6,7 @@ For inspiration (if you have a little extra time), see David Beazley's excellent
 talk on generators: http://www.slideshare.net/dabeaz/python-generator-hacking
 """
 
+
 class Node(object):
     """
     Represents an individual node in a linked list, containing its own value
@@ -15,8 +16,9 @@ class Node(object):
         self.value = value
         self.next = None
 
+
 class LinkedList(object):
-    def __init__(self) :
+    def __init__(self):
         self.head = None
         self.size = 0
 
@@ -54,14 +56,19 @@ class LinkedList(object):
         Additional requirements:
           1. this should return a generator expression that yields each value
         """
-        pass
+        return (node.value for node in self.__iter__())
 
     def append(self, node):
         """
         Create an O(n) append function that will add the supplied `node` to
         the end of this `LinkedList`.
         """
-        pass
+        current_node = self.head
+        if current_node is not None:
+            current_node.next = node
+        else:
+            self.head = node
+        self.size += 1
 
     def reverse(self):
         """
@@ -73,7 +80,10 @@ class LinkedList(object):
           3. make sure your implementation only traverses the list once
           4. warning: remember that nodes are mutable
         """
-        pass
+        reversed_list = LinkedList()
+        for value in self.get_values():
+            reversed_list.prepend(Node(value))
+        return reversed_list
 
     def map(self, func):
         """
@@ -86,7 +96,9 @@ class LinkedList(object):
           3. create one generator expression to apply `func`
           4. create another expression that makes nodes from step 3's expression
         """
-        pass
+        linked_list = LinkedList()
+        linked_list.append((Node(func(node)) for node in self.get_values()))
+        return linked_list
 
     def filter(self, pred):
         """
